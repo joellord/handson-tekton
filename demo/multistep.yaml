@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: multistep
+spec:
+  params:
+  - name: person
+    description: Name of person to greet
+    default: World
+    type: string
+  steps:
+    - name: write-hello
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'echo hello $(params.person) > ~/hello.txt && echo done']
+    - name: say-hello
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'cat ~/hello.txt']
