@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: write-hello
+spec:
+  params:
+  - name: person
+    description: Name of person to greet
+    default: World
+    type: string
+  steps:
+    - name: write
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'echo hello $(params.person) > ~/hello.txt']
+    - name: confirm
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'echo Done!']

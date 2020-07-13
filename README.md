@@ -28,7 +28,7 @@ metadata:
   name: hello-task
 spec:
   steps:
-    - name: build-sources
+    - name: say-hello
       image: ubuntu
       command:
         - /bin/bash
@@ -56,7 +56,7 @@ spec:
   resources:
     inputs:
   steps:
-    - name: build-sources
+    - name: greet-person
       image: ubuntu
       command:
         - /bin/bash
@@ -100,6 +100,19 @@ spec:
 ## Pipeline 
 
 Create a pipeline with hello task
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: hello-pipeline
+spec:
+  tasks:
+    - name: hello-task
+      taskRef:
+        name: hello-task
+```
+
 Diffent containers for each step, recreate multi step task in two tasks
 Shared volume
 

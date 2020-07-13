@@ -1,0 +1,11 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: read-hello
+spec:
+  steps:
+    - name: read-hello
+      image: ubuntu
+      command:
+        - /bin/bash
+      args: ['-c', 'cat ~/hello.txt']

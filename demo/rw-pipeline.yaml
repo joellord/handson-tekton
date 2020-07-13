@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: rw-pipeline
+spec:
+  params:
+    - name: person
+      type: string
+      default: World
+  tasks:
+    - name: write
+      taskRef:
+        name: write-hello
+    - name: read
+      taskRef:
+        name: read-hello
+      runAfter: 
+        - write

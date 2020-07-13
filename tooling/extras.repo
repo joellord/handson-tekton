@@ -1,0 +1,5 @@
+[CentOS-Extras]
+name=CentOS 7 Extras
+baseurl=http://mirror.centos.org/centos/7/extras/x86_64/
+enabled=1
+gpgcheck=0
