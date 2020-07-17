@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello
+spec:
+  params:
+    - name: person
+      description: Name of person to greet
+      default: World
+      type: string
+  steps:
+    - name: write-hello
+      image: registry.access.redhat.com/ubi8/ubi
+      script: |
+        #!/usr/bin/env bash
+        echo Preparing greeting
+        echo Hello $(params.person) > ~/hello.txt
+        sleep 2
+        echo Done!
+    - name: say-hello
+      image: node:14
+      script: |
+        #!/usr/bin/env node
+        let fs = require("fs");
+        let file = "/tekton/home/hello.txt";
+        let fileContent = fs.readFileSync(file).toString();
+        console.log(fileContent);

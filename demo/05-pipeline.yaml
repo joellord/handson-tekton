@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: hello
+spec:
+  params: 
+    - name: who
+      description: Name of the person to greet
+      default: World
+      type: string
+  tasks:
+    - name: progress-start
+      taskRef:
+        name: progress
+      params:
+      - name: percentage
+        value: "0"
+    - name: write-hello
+      params: 
+      - name: person
+        value: $(params.who)
+      taskRef:
+        name: write-hello
+    - name: progress-midway
+      taskRef:
+        name: progress
+      params:
+      - name: percentage
+        value: "50"
+    - name: say-hello
+      taskRef:
+        name: say-hello
+    - name: progress-end
+      taskRef:
+        name: progress
+      params:
+      - name: percentage
+        value: "100"

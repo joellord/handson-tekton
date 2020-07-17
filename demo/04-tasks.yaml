@@ -1,0 +1,54 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: write-hello
+spec:
+  params:
+    - name: person
+      description: Name of person to greet
+      default: World
+      type: string
+  steps:
+    - name: write-hello
+      image: registry.access.redhat.com/ubi8/ubi
+      script: |
+        #!/usr/bin/env bash
+        echo Preparing greeting
+        echo Hello $(params.person) > /hello.txt
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: say-hello
+spec:
+  params:
+    - name: person
+      description: Name of person to greet
+      default: World
+      type: string
+  steps:
+    - name: say-hello
+      image: node:14
+      script: |
+        #!/usr/bin/env node
+        let fs = require("fs");
+        let file = "/hello.txt";
+        let fileContent = fs.readFileSync(file).toString();
+        console.log(fileContent);
+--- 
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: progress
+spec:
+  params:
+  - name: percentage
+    default: "0"
+    type: string
+    description: Current progress in percentage
+  steps:
+    - name: show-progress
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'echo Progress: $(params.percentage)%']

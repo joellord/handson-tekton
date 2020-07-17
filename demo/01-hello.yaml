@@ -4,8 +4,8 @@ metadata:
   name: hello-task
 spec:
   steps:
-    - name: build-sources
-      image: ubuntu
+    - name: say-hello
+      image: registry.access.redhat.com/ubi8/ubi
       command:
         - /bin/bash
-      args: ['-c', 'echo hello world']
+      args: ['-c', 'echo Hello World']
