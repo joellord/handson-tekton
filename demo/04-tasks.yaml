@@ -14,7 +14,8 @@ spec:
       script: |
         #!/usr/bin/env bash
         echo Preparing greeting
-        echo Hello $(params.person) > /hello.txt
+        echo realpath ~
+        echo Hello $(params.person) > ~/hello.txt
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -32,7 +33,7 @@ spec:
       script: |
         #!/usr/bin/env node
         let fs = require("fs");
-        let file = "/hello.txt";
+        let file = "/tekton/home/hello.txt";
         let fileContent = fs.readFileSync(file).toString();
         console.log(fileContent);
 --- 

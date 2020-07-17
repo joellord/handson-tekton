@@ -38,6 +38,8 @@ spec:
       workspaces:
         - name: output
           workspace: shared-hello
+      runAfter:
+        - write-hello
     - name: progress-end
       taskRef:
         name: progress

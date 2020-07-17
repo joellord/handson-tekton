@@ -192,13 +192,24 @@ spec:
       args: ['-c', 'echo Progress: $(params.percentage)%']
 ```
 
-You are now ready to build your first pipeline. 
+You are now ready to build your first pipeline.
 
-Diffent containers for each step, recreate multi step task in two tasks
-Shared volume
+See 05-pipeline.yaml
 
-Introduction to resources
-Create pipeline with git repo input
+Doesn't work...  need workspaces
+
+# Workspaces
+See 06-workspaces.yaml
+
+Doesn't work, need reordering
+
+# Run in parallel or in sequence
+See 07-notdoneyet.yaml
+
+# Resources
+You can also add resources to reuse your pipelines. 
+Count files task
+Add git repo input resource
 
 ## Real world pipeline
 Pipeline tasks
