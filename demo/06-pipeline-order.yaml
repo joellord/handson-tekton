@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: say-things-in-order
+spec:
+  tasks:
+    - name: first-task
+      params:
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
+      taskRef:
+        name: say-something
+    - name: second-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 3"
+        - name: pause-duration
+          value: "2"
+      taskRef:
+        name: say-something
+      runAfter: 
+        - first-task
+    - name: third-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 2"
+        - name: pause-duration
+          value: "1"
+      taskRef:
+        name: say-something
+      runAfter: 
+        - first-task
+    - name: fourth-task
+      params:
+        - name: say-what
+          value: "Happening after task 2 and 3"
+      taskRef:
+        name: say-something
+      runAfter: 
+        - second-task
+        - third-task

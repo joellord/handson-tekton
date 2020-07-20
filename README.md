@@ -133,83 +133,185 @@ tkn task start --showlog hello
 
 ## Pipelines
 
-Tasks are nice but you will usually want to run more than one task. In fact, tasks should do one single thing so you can reuse them across pipelines or even within a single pipeline. For this next examples, you will rewrite the task you had in the last section as two different tasks. You can also create another new task that will output some progress. It will take a percentage as an argument.
+Tasks are nice but you will usually want to run more than one task. In fact, tasks should do one single thing so you can reuse them across pipelines or even within a single pipeline. For this next examples, you will start by writing a generic tasks that will echo whatever is passed in the parameter.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: write-hello
+  name: say-something
 spec:
   params:
-    - name: person
-      description: Name of person to greet
-      default: World
+    - name: say-what
+      description: What should I say
+      default: hello
+      type: string
+    - name: pause-duration
+      description: How long to wait before saying something
+      default: 0
       type: string
   steps:
-    - name: write-hello
-      image: registry.access.redhat.com/ubi8/ubi
-      script: |
-        #!/usr/bin/env bash
-        echo Preparing greeting
-        echo Hello $(params.person) > ~/hello.txt
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: say-hello
-spec:
-  params:
-    - name: person
-      description: Name of person to greet
-      default: World
-      type: string
-  steps:
-    - name: say-hello
-      image: node:14
-      script: |
-        #!/usr/bin/env node
-        let fs = require("fs");
-        let file = "/tekton/home/hello.txt";
-        let fileContent = fs.readFileSync(file).toString();
-        console.log(fileContent);
---- 
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: 
-spec:
-  params:
-  - name: percentage
-    defaultValue: 0
-    type: number
-    description: Current progress in percentage
-  steps:
-    - name: show-progress
+    - name: say-it
       image: registry.access.redhat.com/ubi8/ubi
       command:
         - /bin/bash
-      args: ['-c', 'echo Progress: $(params.percentage)%']
+      args: ['-c', 'sleep $(params.pause-duration) && echo $(params.say-what)']
 ```
 
-You are now ready to build your first pipeline.
+You are now ready to build your first pipeline. A pipeline is a series of tasks that can run either in parallel or at the same time. In this pipeline, you will use the `say-something` tasks twice with different outputs.
 
-See 05-pipeline.yaml
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: say-things
+spec:
+  tasks:
+    - name: first-task
+      params:
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
+      taskRef:
+        name: say-something
+    - name: second-task
+      params:
+        - name: say-what
+          value: "And this is the second task"
+      taskRef:
+        name: say-something
+```
 
-Doesn't work...  need workspaces
+You can now apply the task and this new pipeline to your cluster and start the pipeline. Using `tkn pipeline start` will create a `PipelineRun` with a random name. You can also see the logs of the pipeline by using the `--showlog` parameter.
 
-# Workspaces
-See 06-workspaces.yaml
-
-Doesn't work, need reordering
+```bash
+kubectl apply -f ./demo/04-tasks.yaml
+kubectl apply -f ./demo/05-pipeline.yaml
+tkn pipeline start say-thing --showlog
+```
 
 # Run in parallel or in sequence
-See 07-notdoneyet.yaml
+
+You might have noticed that in the last example, the outputs of the tasks came out in the wrong order. That is because Tekton will try to start all the tasks at the same time so they can run in parallel. If you needed a task to complete before another one, you can use the `runAfter` parameter in the task definition of your pipeline.
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: say-things-in-order
+spec:
+  tasks:
+    - name: first-task
+      params:
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
+      taskRef:
+        name: say-something
+    - name: second-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 3"
+        - name: pause-duration
+          value: "2"
+      taskRef:
+        name: say-something
+      runAfter: 
+        - first-task
+    - name: third-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 2"
+        - name: pause-duration
+          value: "1"
+      taskRef:
+        name: say-something
+      runAfter: 
+        - first-task
+    - name: fourth-task
+      params:
+        - name: say-what
+          value: "Happening after task 2 and 3"
+      taskRef:
+        name: say-something
+      runAfter:
+        - second-task
+        - third-task
+```
+
+If you apply this new pipeline and run it with the Tekton CLI tool, you should see the logs from each task and you should see them in order. If you've installed the Tekton VS Code extension by Red Hat, you will also be able to see a preview of your pipeline and see the order in which each of the steps are happing.
 
 # Resources
-You can also add resources to reuse your pipelines. 
-Count files task
-Add git repo input resource
+
+The last object that will be demonstrated in this lab is `PipelineResources`. When you create pipelines, you will want to make them as generic as you can. This way, your pipelines can be re-used across various projects. In the previous examples, we used pipelines that didn't really do anything interesting. Typically, you will want to have some sort of input on which you will want to perform your tasks. Typically, this would be a git repository. At the end of your pipeline, you will also typically want some sort of output. Something like an image. This is where PipelineResources will come into play. 
+
+In this next example, you will create a pipeline that will take any git repository as a PipelineResource and then count the number of files in it.
+
+First, you can start by creating a task. This task will be similar to the ones you've created earlier but will also have an input resource.
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: count-files
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+        targetPath: code
+  steps:
+    - name: count
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'echo $(find ./code -type f | wc -l) files in repo']
+```
+
+Next, you can create a pipeline that will also have an input resource. This pipeline will have a single task which will be the `count-files` task you've just defined.
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: count
+spec:
+  resources:
+    - name: git-repo
+      type: git
+  tasks:
+    - name: count-task
+      taskRef:
+        name: count-files
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+```
+
+Finally, you can create a PipelineResource. This resource is of type `git` and you can put in the link of a Github repository in the `url` parameter. You can use the repo to this project.
+
+```yaml
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: git-repo
+spec:
+  type: git  
+  params:
+    - name: url
+      value: https://github.com/joellord/handson-tekton.git
+```
+
+Once you have all the required pieces, you can apply this file to the cluster again, and start this pipelinerun. When you start the pipeline with the CLI, you will be prompted on the git resource to use. You can either use the resource you've just created or create your own. You could also use the `--resource` parameter with the CLI to specify which resources to use.
+
+```bash
+kubectl apply -f ./demo/07-pipelineresource.yaml
+tkn pipeline start count --showlog
+tkn pipeline start count --showlog --resource git-repo=git-repo
+```
 
 ## Real world pipeline
 Pipeline tasks
@@ -217,7 +319,7 @@ Pipeline tasks
 * npm install
   * npm run lint
   * npm run test
-* create image
+* create image (output resource)
 
 Next steps
 Move both npm run tasks in parallel

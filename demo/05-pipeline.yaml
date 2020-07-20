@@ -1,38 +1,20 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: hello
+  name: say-things
 spec:
-  params: 
-    - name: who
-      description: Name of the person to greet
-      default: World
-      type: string
   tasks:
-    - name: progress-start
-      taskRef:
-        name: progress
+    - name: first-task
       params:
-      - name: percentage
-        value: "0"
-    - name: write-hello
-      params: 
-      - name: person
-        value: $(params.who)
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
       taskRef:
-        name: write-hello
-    - name: progress-midway
-      taskRef:
-        name: progress
+        name: say-something
+    - name: second-task
       params:
-      - name: percentage
-        value: "50"
-    - name: say-hello
+        - name: say-what
+          value: "And this is the second task"
       taskRef:
-        name: say-hello
-    - name: progress-end
-      taskRef:
-        name: progress
-      params:
-      - name: percentage
-        value: "100"
+        name: say-something

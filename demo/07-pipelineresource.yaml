@@ -1,0 +1,43 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: count-files
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+        targetPath: code
+  steps:
+    - name: count
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'echo $(find ./code -type f | wc -l) files in repo']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: count
+spec:
+  resources:
+    - name: git-repo
+      type: git
+  tasks:
+    - name: count-task
+      taskRef:
+        name: count-files
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: git-repo
+spec:
+  type: git  
+  params:
+    - name: url
+      value: https://github.com/joellord/handson-tekton.git
