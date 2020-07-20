@@ -1,0 +1,22 @@
+{
+  "name": "handson-tekton",
+  "version": "1.0.0",
+  "description": "Demo application for the Hands-On Intro to Cloud Native CI/CD with Tekton lab",
+  "main": "index.js",
+  "scripts": {
+    "lint": "npx eslint index.js",
+    "start": "node .",
+    "test": "npx mocha --exit ./tests"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "express": "^4.17.1",
+    "mocha": "^8.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.5.0"
+  }
+}

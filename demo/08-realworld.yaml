@@ -1,0 +1,72 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: testing
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+        targetPath: code
+  steps:
+    - name: lint
+      image: node:14
+      command:
+        - /bin/bash
+      args: ['-c', 'npm run lint']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: linting
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+        targetPath: code
+  steps:
+    - name: lint
+      image: node:14
+      command:
+        - /bin/bash
+      args: ['-c', 'npm run test']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: app-deploy
+spec:
+  resources:
+    - name: git-repo
+      type: git
+    - name: final-image
+      type: image
+  tasks:
+    - name: lint
+      taskRef:
+        name: linting
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+    - name: test
+      taskRef:
+        name: testing
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+    - name: build-image
+      taskRef:
+        name: s2i
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+        outputs:
+          - name: image
+            resource: final-image
+      runAfter: 
+        - lint
+        - test
