@@ -62,11 +62,12 @@ spec:
     - name: pass
       type: string
       description: Registry password
+    - name: image-name
+      type: string
+      description: Name of the image to produce (will be user/image-name)
   resources:
     - name: git-repo
       type: git
-    - name: final-image
-      type: image
   tasks:
     - name: lint
       taskRef:
@@ -94,15 +95,14 @@ spec:
           value: $(params.user)
         - name: pass
           value: $(params.pass)
+        - name: image-name
+          value: $(params.image-name)
       taskRef:
         name: s2i-nodejs
       resources:
         inputs:
           - name: repo
             resource: git-repo
-        outputs:
-          - name: final-image
-            resource: final-image
       runAfter:
         - lint
         - test
@@ -117,13 +117,15 @@ spec:
       type: string
     - name: pass
       type: string
+    - name: image-name
+      type: string
+    - name: registry
+      type: string
+      default: "docker.io"
   resources:
     inputs:
       - name: repo
         type: git
-    outputs:
-      - name: final-image
-        type: image
   steps:
     - name: generate
       image: quay.io/openshift-pipeline/s2i
@@ -135,7 +137,7 @@ spec:
     - name: build
       image: quay.io/buildah/stable
       workingDir: /gensource
-      command: ["buildah", "bud", "--tls-verify=false", "--layers", "-f", "/gensource/Dockerfile.gen", "-t", "$(outputs.resources.final-image.url)", "."]
+      command: ["buildah", "bud", "--tls-verify=false", "--layers", "-f", "/gensource/Dockerfile.gen", "-t", "$(params.registry)/$(params.user)/$(params.image-name)", "."]
       volumeMounts:
         - name: varlibcontainers
           mountPath: /var/lib/containers
@@ -145,7 +147,7 @@ spec:
         privileged: true
     - name: push
       image: quay.io/buildah/stable
-      command: ['buildah', 'push', '--creds=$(params.user):$(params.pass)', '--tls-verify=false', '$(outputs.resources.final-image.url)', 'docker://$(outputs.resources.final-image.url)']
+      command: ['buildah', 'push', '--creds=$(params.user):$(params.pass)', '--tls-verify=false', '$(params.registry)/$(params.user)/$(params.image-name)', 'docker://$(params.registry)/$(params.user)/$(params.image-name)']
       volumeMounts:
         - name: varlibcontainers
           mountPath: /var/lib/containers
