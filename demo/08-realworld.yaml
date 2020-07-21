@@ -1,8 +1,47 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tkn-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: “/mnt/data”
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tkn-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata: 
+  name: clean
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: cleanup
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'rm -rf $(workspaces.source.path)/*']
+---
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: npm
 spec:
+  workspaces:
+    - name: source
   params:
     - name: action
       description: Action for npm
@@ -16,25 +55,61 @@ spec:
     inputs:
       - name: repo
         type: git
-        targetPath: code
+        targetPath: source
+        optional: true
   steps:
     - name: npm
       image: node:14
       command:
         - /bin/bash
-      args: ['-c', 'cd code/$(params.pathContext) && npm install && npm $(params.action)']
+      args: ['-c', 'cd $(workspaces.source.path)/$(params.pathContext) && npm $(params.action)']
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: final-image
+spec:
+  type: image
+  params:
+    - name: url
+      value: docker.io/joellord/handson-tekton
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   name: app-deploy
 spec:
+  workspaces:
+    - name: tkn-ws
   resources:
     - name: git-repo
       type: git
     - name: final-image
       type: image
   tasks:
+    - name: clean
+      taskRef:
+        name: clean
+      workspaces:
+        - name: source
+          workspace: tkn-ws
+    - name: install
+      taskRef:
+        name: npm
+      params:
+        - name: action
+          value: install
+        - name: pathContext
+          value: app
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo
+      workspaces:
+        - name: source
+          workspace: tkn-ws
+      runAfter:
+        - clean
     - name: lint
       taskRef:
         name: npm
@@ -47,6 +122,11 @@ spec:
         inputs:
           - name: repo
             resource: git-repo
+      workspaces:
+        - name: source
+          workspace: tkn-ws
+      runAfter:
+        - install
     - name: test
       taskRef:
         name: npm
@@ -59,3 +139,31 @@ spec:
         inputs:
           - name: repo
             resource: git-repo
+      workspaces:
+        - name: source
+          workspace: tkn-ws
+      runAfter:
+        - install
+    # - name: build-image
+    #   taskRef:
+    #     name: s2i
+    #   params:
+    #     - name: PATH_CONTEXT
+    #       value: "app"
+    #     - name: TLSVERIFY
+    #       value: "false"
+    #     - name: BUILDER_IMAGE
+    #       value: "centos/node-10-centos7"
+    #   resources:
+    #     inputs:
+    #       - name: repo
+    #         resource: git-repo
+    #     outputs:
+    #       - name: image
+    #         resource: final-image
+    #   workspaces:
+    #     - name: source
+    #       workspace: tkn-ws
+    #   runAfter: 
+    #     - lint
+    #     - test

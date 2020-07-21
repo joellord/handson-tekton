@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: tkn-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tkn-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: write
+spec:
+  workspaces:
+    - name: output
+  steps:
+    - name: write
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'echo hello > $(workspaces.output.path)/hello.txt && echo done']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: read
+spec:
+  workspaces:
+    - name: output
+  steps:
+    - name: read
+      image: registry.access.redhat.com/ubi8/ubi
+      command:
+        - /bin/bash
+      args: ['-c', 'cat $(workspaces.output.path)/hello.txt']
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: workspaces-test
+spec:
+  workspaces:
+    - name: pipeline-ws1
+  tasks:
+    - name: write
+      taskRef:
+        name: write
+      workspaces:
+        - name: output
+          workspace: pipeline-ws1
+    - name: read
+      taskRef: 
+        name: read
+      workspaces:
+        - name: output
+          workspace: pipeline-ws1
+      runAfter:
+        - write
