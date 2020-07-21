@@ -1,36 +1,28 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: testing
+  name: npm
 spec:
+  params:
+    - name: action
+      description: Action for npm
+      default: start
+      type: string
+    - name: pathContext
+      description: Path to application inside git
+      default: ""
+      type: string
   resources:
     inputs:
       - name: repo
         type: git
         targetPath: code
   steps:
-    - name: lint
+    - name: npm
       image: node:14
       command:
         - /bin/bash
-      args: ['-c', 'npm run lint']
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: linting
-spec:
-  resources:
-    inputs:
-      - name: repo
-        type: git
-        targetPath: code
-  steps:
-    - name: lint
-      image: node:14
-      command:
-        - /bin/bash
-      args: ['-c', 'npm run test']
+      args: ['-c', 'cd code/$(params.pathContext) && npm install && npm $(params.action)']
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -45,28 +37,25 @@ spec:
   tasks:
     - name: lint
       taskRef:
-        name: linting
+        name: npm
+      params:
+        - name: action
+          value: run lint
+        - name: pathContext
+          value: app
       resources:
         inputs:
           - name: repo
             resource: git-repo
     - name: test
       taskRef:
-        name: testing
+        name: npm
+      params:
+        - name: action
+          value: run test
+        - name: pathContext
+          value: app
       resources:
         inputs:
           - name: repo
             resource: git-repo
-    - name: build-image
-      taskRef:
-        name: s2i
-      resources:
-        inputs:
-          - name: repo
-            resource: git-repo
-        outputs:
-          - name: image
-            resource: final-image
-      runAfter: 
-        - lint
-        - test
