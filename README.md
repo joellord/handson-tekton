@@ -327,6 +327,10 @@ First, you will start with the `npm` task. This task will be generic enough so t
 
 This task has two parameters, one for the command line arguments to be used with npm (action) and the other one to specify what is the path of the application inside the git repository.
 
+This task will also need an input resource of type `git`. This is the git repository that will be used to run the npm commands on. 
+
+You will then need to add two steps to this task. First, run an `npm install` to ensure that all the dependencies are there. And then run `npm` with the action that was passed as a parameter.
+
 ```yaml 
 apiVersion: tekton.dev/v1beta1
 kind: Task
@@ -357,4 +361,62 @@ spec:
       command:
         - /bin/bash
       args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
+```
+
+Thanks to this `action` parameter, you can now reuse this task for both the `npm run test` and `npm run lint` tasks.
+
+Next up will be the s2i-nodejs task. This task will use s2i and buildah to generate, build and push an image from the source code that we provide to it.
+
+```yaml
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: s2i-nodejs
+spec:
+  params: 
+    - name: user
+      type: string
+    - name: pass
+      type: string
+    - name: image-name
+      type: string
+    - name: registry
+      type: string
+      default: "docker.io"
+  resources:
+    inputs:
+      - name: repo
+        type: git
+  steps:
+    - name: generate
+      image: quay.io/openshift-pipeline/s2i
+      workingDir: /workspace/repo/app
+      command: ["s2i", "build", ".", "registry.access.redhat.com/ubi8/nodejs-12", "--as-dockerfile", "/gensource/Dockerfile.gen"]
+      volumeMounts:
+        - name: gensource
+          mountPath: /gensource
+    - name: build
+      image: quay.io/buildah/stable
+      workingDir: /gensource
+      command: ["buildah", "bud", "--tls-verify=false", "--layers", "-f", "/gensource/Dockerfile.gen", "-t", "$(params.registry)/$(params.user)/$(params.image-name)", "."]
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+        - name: gensource
+          mountPath: /gensource
+      securityContext: 
+        privileged: true
+    - name: push
+      image: quay.io/buildah/stable
+      command: ['buildah', 'push', '--creds=$(params.user):$(params.pass)', '--tls-verify=false', '$(params.registry)/$(params.user)/$(params.image-name)', 'docker://$(params.registry)/$(params.user)/$(params.image-name)']
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+      securityContext:
+        privileged: true
+  volumes:
+    - name: varlibcontainers
+      emptyDir: {}
+    - name: gensource
+      emptyDir: {}
 ```
