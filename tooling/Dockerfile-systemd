@@ -1,8 +1,0 @@
-FROM fedora:25
-ENV container=oci
-
-#RUN dnf -y install httpd; dnf clean all; systemctl enable httpd
-
-STOPSIGNAL SIGRTMIN+3
-
-CMD [ "/sbin/init" ]

@@ -313,18 +313,48 @@ tkn pipeline start count --showlog
 tkn pipeline start count --showlog --resource git-repo=git-repo
 ```
 
+# Workspaces
+It is important to note that PipelineResources are still in alpha and the Tekton core team questions whether they should stay in the spec or not. In the latest version of Tekton, `workspaces` were added as a way to share file systems between various tasks in a Pipeline. You can find an example of a pipeline using a workspace in the file workspace.yaml. Workspaces require the usage of PersistentVolumes and PersistentVolumeClaims which are out of scope for this lab.
+
 ## Real world pipeline
-Pipeline tasks
-* git clone (input resource)
-* npm install
-  * npm run lint
-  * npm run test
-* create image (output resource)
+So far, all these examples have been good to demonstrate how Tekton internals work but not very useful for your day to day developer life. Let's look at a real Pipeline. In this section, you will create a Pipeline that will run three tasks for a NodeJS project
 
-Next steps
-Move both npm run tasks in parallel
-Show failure in one step
-Fix it and start new pipelinerun
+* It will run a linter to ensure there are not linting issues in the code
+* It will run the unit tests to validate the code
+* If both the linting and testing pass, it will create a NodeJS image and push it to Docker using `s2i` and `buildah`
 
-## Bonus Stretch
-Connect a Hue lightbulb and change color on success/failure
+First, you will start with the `npm` task. This task will be generic enough so that it can be used for the first two steps of the Pipeline.
+
+This task has two parameters, one for the command line arguments to be used with npm (action) and the other one to specify what is the path of the application inside the git repository.
+
+```yaml 
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm
+spec:
+  params:
+    - name: pathContext
+      description: Path to application inside git
+      default: "."
+      type: string
+    - name: action
+      description: Operation to be performed by npm
+      default: "start"
+      type: string
+  resources:
+    inputs:
+      - name: repo
+        type: git
+  steps:
+    - name: npm-install
+      image: node:14
+      command:
+        - /bin/bash
+      args: ['-c', 'cd repo/$(params.pathContext) && npm install']
+    - name: npm-lint
+      image: node:14
+      command:
+        - /bin/bash
+      args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
+```
