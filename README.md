@@ -4,13 +4,11 @@
 * Minikube
 * Tkn
 * VS Code extension
- (Course Tools container?)
 
 ## Intro
 * Intros, why should you care about CI/CD
-* What is CI/CD and Cloud Native CI/CD
+* What is CI/CD and Cloud-Native CI/CD
 * Tekton
-
 
 ## Installation
 Start by installing Tekton on your cluster.
@@ -22,7 +20,7 @@ kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline
 ## Create a Hello World task
 Tasks happen inside a pod. You can use tasks to perform various CI/CD operations. Things like compiling your application or running some unit tests.
 
-For this first task, you will simply use a Red Hat Universal Base Image and echo a hello world.
+For this first Task, you will simply use a Red Hat Universal Base Image and echo a hello world.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -38,22 +36,21 @@ spec:
       args: ['-c', 'echo Hello World']
 ```
 
-Apply this task to your cluster just like any other Kubernetes object. Then run it using `tkn`, the CLI tool for Tekton.
+Apply this Task to your cluster just like any other Kubernetes object. Then run it using `tkn`, the CLI tool for Tekton.
 
 ```bash
 kubectl apply -f ./demo/01-hello.yaml
 tkn task start --showlog hello
 ```
 
-## Add a Parameter to the task
+## Add a Parameter to the Task
+Tasks can also take parameters. This way, you can pass various flags to be used in this Task. These parameters can be instrumental in making your Tasks more generic and reusable across Pipelines.
 
-Tasks can also take parameters. This way, you can pass various flags to be used in this task. This could be useful for a task that would run unit tests but where you could specify a subset of tests to run as a parameter.
+In this next example, you will create a task that will ask for a person's name and then say Hello to that person.
 
-In this next example, you will create a task that will ask for a person name and then say Hello to that person.
+Starting with the previous example, you can add a `params` property to your task's `spec`. A param takes a name and a type. You can also add a description and a default value for this Task. 
 
-Starting with the previous example, you can add a `params` property to the `spec` of your task. A param takes a name and a type. You can also add a description and a default value for this task. 
-
-For this parameter, the name is `person`, the description with be `Name of person to greet`, the default value will be `World` so we can say "Hello World" if no value is provided and the type of parameter is a `string`.
+For this parameter, the name is `person`, the description is `Name of person to greet`, the default value is `World`, and the type of parameter is a `string`. If you don't provide a parameter to this Task, the greeting will be "Hello World".
 
 You can then access those params by using variable substitution. In this case, change the word "World" in the `args` line to `$(params.person)`.
 
@@ -76,7 +73,7 @@ spec:
       args: ['-c', 'echo Hello $(params.person)']
 ```
 
-Apply this new task to your cluster with kubectl and then run it again. You will now be asked for the name of the person to greet.
+Apply this new Task to your cluster with kubectl and then rerun it. You will now be asked for the name of the person to greet.
 
 You can also specify the parameters directly from the command line by using the -p argument.
 
@@ -87,12 +84,11 @@ tkn task start --showlog -p person=Joel hello
 ```
 
 ## Multiple steps to Task
-
-Your tasks can have more than one step. In this next example you will change this task to use two steps. The first one will write to a file and the second one will output the content of that file. The steps will run in the order in which they are defined in the `steps` array.
+Your tasks can have more than one step. In this next example, you will change this Task to use two steps. The first one will write to a file, and the second one will output the content of that file. The steps will run in the order in which they are defined in the `steps` array.
 
 First, start by adding a new step called `write-hello`. In here, you will use the same UBI base image. Instead of using a single command, you can also write a script. You can do this with a `script` parameter, followed by a | and the actual script to run. In this script, start by echoing "Preparing greeting", then echo the "Hello $(params.person)" that you had in the previous example into the ~/hello.txt file. Finally, add a little pause with the sleep command and echo "Done".
 
-For the second step, you can create a new step called `read-hello`. This second step will run in its own container but will share the /tekton folder from the previous step. In the first step, you created a file in the "~" folder which maps to "/tekton/home". For this second step, you can use an image `node:14` and the file you created in the first step will be accessible. You can also run a NodeJS script as long as you specify the executable in the #! line of your script. In this case, you can write a script that will output the content of the ~/hello.txt file.
+For the second step, you can create a new step called `read-hello`. This second step will run in its container but share the /tekton folder from the previous step. In the first step, you created a file in the "~" folder, which maps to "/tekton/home". For this second step, you can use an image `node:14,` and the file you created in the first step will be accessible. You can also run a NodeJS script as long as you specify the executable in the #! line of your script. In this case, you can write a script that will output the content of the ~/hello.txt file.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -124,7 +120,7 @@ spec:
         console.log(fileContent);
 ```
 
-You can now apply this task to your cluster and run this task with tkn. You will see that you can easily see the output of each step as they are highlighted in the output from Tekton.
+You can now apply this Task to your cluster and run this Task with tkn. You will see that you can easily see each step's output as the logs outputs in various colours.
 
 ```bash
 kubectl apply -f ./demo/03-multistep.yaml
@@ -132,8 +128,7 @@ tkn task start --showlog hello
 ```
 
 ## Pipelines
-
-Tasks are nice but you will usually want to run more than one task. In fact, tasks should do one single thing so you can reuse them across pipelines or even within a single pipeline. For this next examples, you will start by writing a generic tasks that will echo whatever is passed in the parameter.
+Tasks are useful, but you will usually want to run more than one Task. In fact, tasks should do one single thing so you can reuse them across pipelines or even within a single pipeline. For this next example, you will start by writing a generic task that will echo whatever it receives in the parameters.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -158,7 +153,7 @@ spec:
       args: ['-c', 'sleep $(params.pause-duration) && echo $(params.say-what)']
 ```
 
-You are now ready to build your first pipeline. A pipeline is a series of tasks that can run either in parallel or at the same time. In this pipeline, you will use the `say-something` tasks twice with different outputs.
+You are now ready to build your first Pipeline. A pipeline is a series of tasks that can run either in parallel or at the same time. In this Pipeline, you will use the `say-something` tasks twice with different outputs.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -183,7 +178,7 @@ spec:
         name: say-something
 ```
 
-You can now apply the task and this new pipeline to your cluster and start the pipeline. Using `tkn pipeline start` will create a `PipelineRun` with a random name. You can also see the logs of the pipeline by using the `--showlog` parameter.
+You can now apply the Task and this new Pipeline to your cluster and start the Pipeline. Using `tkn pipeline start` will create a `PipelineRun` with a random name. You can also see the logs of the Pipeline by using the `--showlog` parameter.
 
 ```bash
 kubectl apply -f ./demo/04-tasks.yaml
@@ -191,9 +186,8 @@ kubectl apply -f ./demo/05-pipeline.yaml
 tkn pipeline start say-thing --showlog
 ```
 
-# Run in parallel or in sequence
-
-You might have noticed that in the last example, the outputs of the tasks came out in the wrong order. That is because Tekton will try to start all the tasks at the same time so they can run in parallel. If you needed a task to complete before another one, you can use the `runAfter` parameter in the task definition of your pipeline.
+# Run in parallel or sequentially
+You might have noticed that in the last example, the tasks' output came out in the wrong order. That is because Tekton will try to start all the tasks simultaneously so they can run in parallel. If you needed a task to complete before another one, you could use the `runAfter` parameter in the task definition of your Pipeline.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -241,15 +235,14 @@ spec:
         - third-task
 ```
 
-If you apply this new pipeline and run it with the Tekton CLI tool, you should see the logs from each task and you should see them in order. If you've installed the Tekton VS Code extension by Red Hat, you will also be able to see a preview of your pipeline and see the order in which each of the steps are happing.
+If you apply this new Pipeline and run it with the Tekton CLI tool, you should see the logs from each Task, and you should see them in order. If you've installed the Tekton VS Code extension by Red Hat, you will also be able to see a preview of your Pipeline and see the order in which each of the steps is happing.
 
 # Resources
+The last object that will be demonstrated in this lab is `PipelineResources`. When you create pipelines, you will want to make them as generic as you can. This way, your pipelines can be reused across various projects. In the previous examples, we used pipelines that didn't do anything interesting. Typically, you will want to have some input on which you will want to perform your tasks. Usually, this would be a git repository. At the end of your Pipeline, you will also typically want some sort of output. Something like an image. This is where PipelineResources will come into play. 
 
-The last object that will be demonstrated in this lab is `PipelineResources`. When you create pipelines, you will want to make them as generic as you can. This way, your pipelines can be re-used across various projects. In the previous examples, we used pipelines that didn't really do anything interesting. Typically, you will want to have some sort of input on which you will want to perform your tasks. Typically, this would be a git repository. At the end of your pipeline, you will also typically want some sort of output. Something like an image. This is where PipelineResources will come into play. 
+In this next example, you will create a pipeline that will take any git repository as a PipelineResource and then count the number of files.
 
-In this next example, you will create a pipeline that will take any git repository as a PipelineResource and then count the number of files in it.
-
-First, you can start by creating a task. This task will be similar to the ones you've created earlier but will also have an input resource.
+First, you can start by creating a task. This Task will be similar to the ones you've created earlier but will also have an input resource.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -270,7 +263,7 @@ spec:
       args: ['-c', 'echo $(find ./code -type f | wc -l) files in repo']
 ```
 
-Next, you can create a pipeline that will also have an input resource. This pipeline will have a single task which will be the `count-files` task you've just defined.
+Next, you can create a pipeline that will also have an input resource. This Pipeline will have a single task, which will be the `count-files` task you've just defined.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -291,7 +284,7 @@ spec:
             resource: git-repo
 ```
 
-Finally, you can create a PipelineResource. This resource is of type `git` and you can put in the link of a Github repository in the `url` parameter. You can use the repo to this project.
+Finally, you can create a PipelineResource. This resource is of type `git`, and you can put in the link of a Github repository in the `url` parameter. You can use the repo for this project.
 
 ```yaml
 apiVersion: tekton.dev/v1alpha1
@@ -305,7 +298,7 @@ spec:
       value: https://github.com/joellord/handson-tekton.git
 ```
 
-Once you have all the required pieces, you can apply this file to the cluster again, and start this pipelinerun. When you start the pipeline with the CLI, you will be prompted on the git resource to use. You can either use the resource you've just created or create your own. You could also use the `--resource` parameter with the CLI to specify which resources to use.
+Once you have all the required pieces, you can apply this file to the cluster again, and start this pipelinerun. When you begin the Pipeline with the CLI, you will be prompted on the git resource to use. You can either use the resource you've just created or create your own. You could also use the `--resource` parameter with the CLI to specify which resources to use.
 
 ```bash
 kubectl apply -f ./demo/07-pipelineresource.yaml
@@ -314,22 +307,22 @@ tkn pipeline start count --showlog --resource git-repo=git-repo
 ```
 
 # Workspaces
-It is important to note that PipelineResources are still in alpha and the Tekton core team questions whether they should stay in the spec or not. In the latest version of Tekton, `workspaces` were added as a way to share file systems between various tasks in a Pipeline. You can find an example of a pipeline using a workspace in the file workspace.yaml. Workspaces require the usage of PersistentVolumes and PersistentVolumeClaims which are out of scope for this lab.
+It is important to note that PipelineResources is still in alpha. The Tekton core team questions whether they should stay in the spec or not. In the latest version of Tekton, `workspaces` were added to share file systems between various tasks in a Pipeline. You can find an example of a pipeline using a workspace in the file workspace.yaml. Workspaces require the usage of PersistentVolumes and PersistentVolumeClaims, which are out of scope for this lab.
 
-## Real world pipeline
-So far, all these examples have been good to demonstrate how Tekton internals work but not very useful for your day to day developer life. Let's look at a real Pipeline. In this section, you will create a Pipeline that will run three tasks for a NodeJS project
+## Real-world pipeline
+So far, all these examples have been good to demonstrate how Tekton internals work but not very useful for your day to day developer life. Let's look at a real Pipeline. In this section, you will create a Pipeline that will run three tasks for a NodeJS project.
 
 * It will run a linter to ensure there are not linting issues in the code
 * It will run the unit tests to validate the code
-* If both the linting and testing pass, it will create a NodeJS image and push it to Docker using `s2i` and `buildah`
+* If both the linting and testing pass, it will create a NodeJS image and push it to Docker using `s2i` and `buildah`.
 
-First, you will start with the `npm` task. This task will be generic enough so that it can be used for the first two steps of the Pipeline.
+First, you will start with the `npm` task. This Task will be generic enough to be used for the first two steps of the Pipeline.
 
-This task has two parameters, one for the command line arguments to be used with npm (action) and the other one to specify what is the path of the application inside the git repository.
+This Task has two parameters, one for the command line arguments to be used with npm (action) and the other one to specify the path of the application inside the git repository.
 
-This task will also need an input resource of type `git`. This is the git repository that will be used to run the npm commands on. 
+This Task will also need an input resource of type `git`. This input is the git repository on which you will apply the npm commands. 
 
-You will then need to add two steps to this task. First, run an `npm install` to ensure that all the dependencies are there. And then run `npm` with the action that was passed as a parameter.
+You will then need to add two steps to this Task. First, run an `npm install` to ensure that all the dependencies are there. And then run `npm` with the action parameter.
 
 ```yaml 
 apiVersion: tekton.dev/v1beta1
@@ -363,9 +356,19 @@ spec:
       args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
 ```
 
-Thanks to this `action` parameter, you can now reuse this task for both the `npm run test` and `npm run lint` tasks.
+Thanks to this `action` parameter, you can now reuse this Task for both the `npm run test` and `npm run lint` tasks.
 
-Next up will be the s2i-nodejs task. This task will use s2i and buildah to generate, build and push an image from the source code that we provide to it.
+Next up will be the s2i-nodejs Task. This Task will use s2i and buildah to generate, build and push an image from the source code that we provide to it.
+
+You will need a few parameters for this Task. First, you will need the username and password for the registry to use. If using Docker Hub, you can generate an API token instead of a password. Then, you need an image name and the registry. The image generated by buildah will have the name <registry>/<user>/<image-name>. You can also add the git input resource.
+
+You can then add the multiple steps required to build and deploy your image. First, you need to generate a Dockerfile with s2i. For more information on how s2i works, you can check out (https://github.com/openshift/source-to-image)[https://github.com/openshift/source-to-image]. For this pod, you will mount a volume that can be shared with the other steps. You will add the volumes at the end of this Task's spec property.
+
+Then, you can use buildah to build the image. You will do this in the `build` step. For more information on buildah, check out the website (https://buildah.io/)[https://buildah.io/].
+
+And finally, you will use buildah again to push the image to an image registry. Note how the parameters are used in each of the commands to make this Task as generic as possible. This way, it can be reused in different pipelines.
+
+Finally, you will need to describe the two volumes shared between the steps in this Task. The volumes in this example have a type `emptyDir`, which means they will start as empty directories and simply be destroyed once the Task is completed.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -419,4 +422,13 @@ spec:
       emptyDir: {}
     - name: gensource
       emptyDir: {}
+```
+
+You are now ready to deploy your application. First, apply this file to your cluster and then start this new Pipeline using the Tekton CLI tool. It will take a little bit more time as it goes through all the steps. Once your Pipeline completed, you can start the application by using `docker run`. This container will start the NodeJS server on port 3000. The server has a route called /add that will take two parameters and add them together. You can test this out by using a `curl` command.
+
+```bash
+kubectl apply -f ./demo/08-realworld.yaml
+tkn pipeline start app-deploy --showlog
+docker run -d -p 3000:3000 --rm --name handson <user>/<image-name>
+curl localhost:3000/add/2/5
 ```
