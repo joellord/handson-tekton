@@ -183,7 +183,7 @@ You can now apply the Task and this new Pipeline to your cluster and start the P
 ```bash
 kubectl apply -f ./demo/04-tasks.yaml
 kubectl apply -f ./demo/05-pipeline.yaml
-tkn pipeline start say-thing --showlog
+tkn pipeline start say-things --showlog
 ```
 
 # Run in parallel or sequentially
@@ -235,7 +235,12 @@ spec:
         - third-task
 ```
 
-If you apply this new Pipeline and run it with the Tekton CLI tool, you should see the logs from each Task, and you should see them in order. If you've installed the Tekton VS Code extension by Red Hat, you will also be able to see a preview of your Pipeline and see the order in which each of the steps is happing.
+If you apply this new Pipeline and run it with the Tekton CLI tool, you should see the logs from each Task, and you should see them in order. If you've installed the Tekton VS Code extension by Red Hat, you will also be able to see a preview of your Pipeline and see the order in which each of the steps is happening.
+
+```
+kubectl apply -f ./demo/06-pipeline-order.yaml
+tkn pipeline start say-things-in-order --showlog
+```
 
 # Resources
 The last object that will be demonstrated in this lab is `PipelineResources`. When you create pipelines, you will want to make them as generic as you can. This way, your pipelines can be reused across various projects. In the previous examples, we used pipelines that didn't do anything interesting. Typically, you will want to have some input on which you will want to perform your tasks. Usually, this would be a git repository. At the end of your Pipeline, you will also typically want some sort of output. Something like an image. This is where PipelineResources will come into play. 

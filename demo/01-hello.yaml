@@ -1,7 +1,7 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: hello-task
+  name: hello
 spec:
   steps:
     - name: say-hello
