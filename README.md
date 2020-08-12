@@ -2,9 +2,9 @@
 
 ## Requirements
 
-* Minikube
-* Tkn
-* VS Code extension
+* [Minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/) -OR- [Katacoda Kubernetes Playground](https://www.katacoda.com/courses/kubernetes/playground)
+* [tkn](https://github.com/tektoncd/cli)
+* (Optional) [VS Code Tekton extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-tekton-pipelines)
 
 ## Intro
 
@@ -14,10 +14,19 @@
 
 ## Installation
 
-Start by installing Tekton on your cluster.
+First, make sure you've installed [tkn](https://github.com/tektoncd/cli) in your environment, whether you are using Minikube on your local machine or the Kubernetes playground. If you're using the Kubernetes playground, enter commands in the top terminal labeled Terminal Host 1. 
+
+Then, install Tekton on your cluster.
 
 ```bash
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+```
+
+Finally, clone this repository and cd into the `handson-tekton` directory.
+
+```bash
+git clone https://github.com/joellord/handson-tekton
+cd handson-tekton
 ```
 
 ## Create a Hello World task
