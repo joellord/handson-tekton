@@ -103,7 +103,7 @@ Your tasks can have more than one step. In this next example, you will change th
 
 First, start by adding a new step called `write-hello`. In here, you will use the same UBI base image. Instead of using a single command, you can also write a script. You can do this with a `script` parameter, followed by a | and the actual script to run. In this script, start by echoing "Preparing greeting", then echo the "Hello $(params.person)" that you had in the previous example into the ~/hello.txt file. Finally, add a little pause with the sleep command and echo "Done".
 
-For the second step, you can create a new step called `read-hello`. This second step will run in its container but share the /tekton folder from the previous step. In the first step, you created a file in the "~" folder, which maps to "/tekton/home". For this second step, you can use an image `node:14,` and the file you created in the first step will be accessible. You can also run a NodeJS script as long as you specify the executable in the #! line of your script. In this case, you can write a script that will output the content of the ~/hello.txt file.
+For the second step, you can create a new step called `say-hello`. This second step will run in its container but share the /tekton folder from the previous step. In the first step, you created a file in the "~" folder, which maps to "/tekton/home". For this second step, you can use an image `node:14,` and the file you created in the first step will be accessible. You can also run a NodeJS script as long as you specify the executable in the #! line of your script. In this case, you can write a script that will output the content of the ~/hello.txt file.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -169,7 +169,7 @@ spec:
       args: ['-c', 'sleep $(params.pause-duration) && echo $(params.say-what)']
 ```
 
-You are now ready to build your first Pipeline. A pipeline is a series of tasks that can run either in parallel or at the same time. In this Pipeline, you will use the `say-something` tasks twice with different outputs.
+You are now ready to build your first Pipeline. A pipeline is a series of tasks that can run either in parallel or sequentially. In this Pipeline, you will use the `say-something` tasks twice with different outputs.
 
 ```yaml
 apiVersion: tekton.dev/v1beta1
@@ -457,3 +457,10 @@ tkn pipeline start app-deploy --showlog
 docker run -d -p 3000:3000 --rm --name handson <user>/<image-name>
 curl localhost:3000/add/2/5
 ```
+## More Resources
+
+If you want to keep learning more about Tekton, check out these resources:
+
+* https://tekton.dev - The main tekton website
+* https://hub-preview.tekton.dev - Tekton Hub, where you can find reusable tasks and pipelines
+* https://developers.redhat.com/topics/ci-cd - Developer-facing info on CI/CD and Tekton
