@@ -6,15 +6,18 @@
 * [tkn](https://github.com/tektoncd/cli)
 * (Optional) [VS Code Tekton extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-tekton-pipelines)
 
+:warning: **Using [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) will not work!** Some weird symptoms include Paraters are not being substituted.
+
 ## Intro
 
 * Intros, why should you care about CI/CD
 * What is CI/CD and Cloud-Native CI/CD
 * Tekton
 
+
 ## Installation
 
-First, make sure you've installed [tkn](https://github.com/tektoncd/cli) in your environment, whether you are using Minikube on your local machine or the Kubernetes playground. If you're using the Kubernetes playground, enter commands in the top terminal labeled Terminal Host 1. 
+First, make sure you've installed [tkn](https://github.com/tektoncd/cli) in your environment, whether you are using Minikube on your local machine or the Kubernetes playground. If you're using the Kubernetes playground, enter commands in the top terminal labeled Terminal Host 1.
 
 Then, install Tekton on your cluster.
 
@@ -315,7 +318,7 @@ kind: PipelineResource
 metadata:
   name: git-repo
 spec:
-  type: git  
+  type: git
   params:
     - name: url
       value: https://github.com/joellord/handson-tekton.git
