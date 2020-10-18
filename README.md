@@ -6,7 +6,7 @@
 * [tkn](https://github.com/tektoncd/cli)
 * (Optional) [VS Code Tekton extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-tekton-pipelines)
 
-:warning: **Using [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) will not work!** Some weird symptoms include Paraters are not being substituted.
+:warning: **Using [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) will not work!** Some weird symptoms include Parameters are not being substituted.
 
 ## Intro
 
