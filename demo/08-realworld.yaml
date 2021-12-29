@@ -19,11 +19,13 @@ spec:
   steps:
     - name: npm-install
       image: node:14
+      workingDir: /workspace
       command:
         - /bin/bash
       args: ['-c', 'cd repo/$(params.pathContext) && npm install']
     - name: npm-lint
       image: node:14
+      workingDir: /workspace
       command:
         - /bin/bash
       args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
@@ -95,6 +97,9 @@ spec:
     - name: image-name
       type: string
       description: Name of the image to produce (will be user/image-name)
+    - name: registry
+      type: string
+      default: "docker.io"
   resources:
     - name: git-repo
       type: git
@@ -131,6 +136,8 @@ spec:
           value: $(params.pass)
         - name: image-name
           value: $(params.image-name)
+        - name: registry
+          value: $(params.registry)
       taskRef:
         name: s2i-nodejs
       resources:
