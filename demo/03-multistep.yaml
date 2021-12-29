@@ -14,7 +14,7 @@ spec:
       script: |
         #!/usr/bin/env bash
         echo Preparing greeting
-        echo Hello $(params.person) > ~/hello.txt
+        echo Hello $(params.person) > /tekton/home/hello.txt
         sleep 2
         echo Done!
     - name: say-hello
