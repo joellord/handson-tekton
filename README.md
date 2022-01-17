@@ -122,7 +122,7 @@ spec:
       script: |
         #!/usr/bin/env bash
         echo Preparing greeting
-        echo Hello $(params.person) > ~/hello.txt
+        echo Hello $(params.person) > /tekton/home/hello.txt
         sleep 2
         echo Done!
     - name: say-hello
@@ -281,6 +281,7 @@ spec:
   steps:
     - name: count
       image: registry.access.redhat.com/ubi8/ubi
+      workingDir: /workspace
       command:
         - /bin/bash
       args: ['-c', 'echo $(find ./code -type f | wc -l) files in repo']
@@ -371,11 +372,13 @@ spec:
   steps:
     - name: npm-install
       image: node:14
+      workingDir: /workspace
       command:
         - /bin/bash
       args: ['-c', 'cd repo/$(params.pathContext) && npm install']
     - name: npm-lint
       image: node:14
+      workingDir: /workspace
       command:
         - /bin/bash
       args: ['-c', 'cd repo/$(params.pathContext) && npm $(params.action)']
