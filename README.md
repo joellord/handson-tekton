@@ -159,7 +159,7 @@ spec:
       type: string
     - name: pause-duration
       description: How long to wait before saying something
-      default: 0
+      default: "0"
       type: string
   steps:
     - name: say-it
