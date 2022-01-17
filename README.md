@@ -316,7 +316,7 @@ kind: PipelineResource
 metadata:
   name: git-repo
 spec:
-  type: git  
+  type: git
   params:
     - name: url
       value: https://github.com/joellord/handson-tekton.git
