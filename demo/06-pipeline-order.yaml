@@ -20,7 +20,7 @@ spec:
           value: "2"
       taskRef:
         name: say-something
-      runAfter: 
+      runAfter:
         - first-task
     - name: third-task
       params:
@@ -30,7 +30,7 @@ spec:
           value: "1"
       taskRef:
         name: say-something
-      runAfter: 
+      runAfter:
         - first-task
     - name: fourth-task
       params:
@@ -38,6 +38,6 @@ spec:
           value: "Happening after task 2 and 3"
       taskRef:
         name: say-something
-      runAfter: 
+      runAfter:
         - second-task
         - third-task

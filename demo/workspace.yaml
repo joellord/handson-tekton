@@ -64,7 +64,7 @@ spec:
         - name: output
           workspace: pipeline-ws1
     - name: read
-      taskRef: 
+      taskRef:
         name: read
       workspaces:
         - name: output
