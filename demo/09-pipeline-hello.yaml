@@ -1,0 +1,10 @@
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineRun
+metadata:
+  name: 09-pipeline-hello
+spec:
+  pipelineSpec:
+    tasks:
+    - name: hello
+      taskRef:
+        name: hello
