@@ -457,9 +457,27 @@ spec:
 You are now ready to deploy your application. First, apply this file to your cluster and then start this new Pipeline using the Tekton CLI tool. It will take a little bit more time as it goes through all the steps. Once your Pipeline completed, you can start the application by using `docker run`. This container will start the NodeJS server on port 3000. The server has a route called /add that will take two parameters and add them together. You can test this out by using a `curl` command.
 
 ```bash
+❯ tkn p start app-deploy
+no PipelineResource of type "git" found in namespace: default
+Please create a new "git" resource for PipelineResource "git-repo"
+? Enter a name for a pipeline resource : git-repo
+? Enter a value for url :  https://github.com/mytestlab123/tekton-handson-demo
+? Enter a value for revision :
+New git resource "git-repo" has been created
+? Value for param `user` of type `string`? amitkarpe
+? Value for param `pass` of type `string`? paaasword
+? Value for param `image-name` of type `string`? tekton-handson-demo
+? Value for param `registry` of type `string`? (Default is `docker.io`) docker.io
+PipelineRun started: app-deploy-run-w2wn5
+
+In order to track the PipelineRun progress run:
+tkn pipelinerun logs app-deploy-run-w2wn5 -f -n default
+```
+
+```bash
 kubectl apply -f ./demo/08-realworld.yaml
 tkn pipeline start app-deploy --showlog
-docker run -d -p 3000:3000 --rm --name handson <user>/<image-name>
+docker run -d -p 3000:3000 --rm --name handson amitkarpe/tekton-handson-demo
 curl localhost:3000/add/2/5
 ```
 ## More Resources
